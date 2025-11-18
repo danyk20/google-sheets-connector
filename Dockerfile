@@ -1,13 +1,15 @@
-FROM python:3.10-slim-buster
+FROM python:3.11-slim
 ARG ENVIRONMENT
 
 WORKDIR /usr/src/app
 
 # upgrade to latest pip
 RUN pip install --upgrade pip
+
+# install system dependencies
 RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y git
+    apt-get install -y git curl && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install workflows-cdk package
 RUN pip install git+https://github.com/stacksyncdata/workflows-cdk.git@prod
@@ -17,28 +19,13 @@ COPY requirements.txt ./
 RUN pip3 install -r requirements.txt
 
 # copy the scripts
-COPY / .
+COPY . .
 
-# setup flask server
 # expose port
 EXPOSE 8080
-#set environment variable on linux: export PORT=2001
-CMD exec gunicorn --bind 8080:8080
 
 # make the entrypoint executable
 RUN chmod +x ./entrypoint.sh
 
-# run the entrypoint to start the Guicorn production server
+# run the entrypoint to start the Gunicorn server
 ENTRYPOINT ["sh", "entrypoint.sh"]
-
-
-# RUN in interactive mode
-# UNIX: docker run --rm -p 2001:8080 -it -e ENVIRONMENT=dev -e REGION=besg -v $PWD:/usr/src/app/ workflows-app-example
-# Windows: docker run --rm -p 2001:8080 -it -e ENVIRONMENT=dev -e REGION=besg -v ${PWD}:/usr/src/app/ workflows-app-example
-
-# BUILD container
-# docker build -t workflows-app-example . --build-arg ENVIRONMENT=dev
-# docker build --no-cache -t workflows-app-example . --build-arg ENVIRONMENT=dev
-
-# CONNECT to container terminal
-# docker exec -it workflows-app-example bash
