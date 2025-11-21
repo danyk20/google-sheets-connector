@@ -74,16 +74,20 @@ else
   echo "Docker image ${APP_NAME} already exists. Skipping build."
   echo "Use --build flag to force a rebuild."
 fi
+if [ $? -ne 0 ]; then
+  echo "❌ Docker build failed. Exiting..."
+  exit 1
+fi
 
 # Determine OS type and run container
 if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "windows" ]]; then
     # Windows - using Command Prompt or PowerShell
     echo "Detected Windows environment"
     echo "Starting container on port ${PORT}..."
-    docker run --rm -p ${PORT}:${PORT} -it -e ENVIRONMENT=dev -e REGION=besg --name=${APP_NAME} -v ${PWD}:/usr/src/app/ ${APP_NAME}
+    docker run --rm -p ${PORT}:8080 -it -e ENVIRONMENT=dev -e REGION=besg --name=${APP_NAME} -v ${PWD}:/usr/src/app/ ${APP_NAME}
 else
     # Unix/Mac environment
     echo "Detected Unix/Mac environment"
     echo "Starting container on port ${PORT}..."
-    docker run --rm -p ${PORT}:${PORT} -it -e ENVIRONMENT=dev -e REGION=besg --name=${APP_NAME} -v $PWD:/usr/src/app/ ${APP_NAME}
+    docker run --rm -p ${PORT}:8080 -it -e ENVIRONMENT=dev -e REGION=besg --name=${APP_NAME} -v $PWD:/usr/src/app/ ${APP_NAME}
 fi 

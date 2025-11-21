@@ -7,17 +7,16 @@ for %%a in (%*) do (
     if "%%a"=="--build" set "REBUILD=true"
 )
 
-REM Print Stacksync branding
 echo.
-echo [96m  ____  _             _                           [0m
-echo [96m / ___|| |_ __ _  ___| | _____ _   _ _ __   ___  [0m
-echo [96m \___ \| __/ _` |/ __| |/ / __| | | | '_ \ / __| [0m
-echo [96m  ___) | || (_| | (__|   <\__ \ |_| | | | | (__  [0m
-echo [96m |____/ \__\__,_|\___|_|\_\___/\__, |_| |_|\___| [0m
-echo [96m                               |___/             [0m
+echo   ____  _             _                           
+echo  / ___|| |_ __ _  ___| | _____ _   _ _ __   ___  
+echo  \___ \| __/ _` |/ __| |/ / __| | | | '_ \ / __| 
+echo   ___) | || (_| | (__|   <\__ \ |_| | | | | (__  
+echo  |____/ \__\__,_|\___|_|\_\___/\__, |_| |_|\___| 
+echo                                |___/             
 echo.
-echo [92mApp Connector Public Module[0m
-echo [94mDocumentation: https://docs.stacksync.com/workflows/app-connector[0m
+echo App Connector Public Module
+echo Documentation: https://docs.stacksync.com/workflows/app-connector
 echo.
 
 REM Ensure config directory exists
@@ -36,23 +35,25 @@ if exist "app_config.yaml" (
         echo Using port from app_config.yaml: !PORT!
         goto :port_found
     )
-    echo No port specified in app_config.yaml. Using default port: %PORT%
+    echo No port specified. Using default port: %PORT%
 ) else (
     echo Could not read app_config.yaml. Using default port: %PORT%
 )
 
 :port_found
 
-REM Determine the location of Dockerfile.dev
+REM Determine Dockerfile path
 set "DOCKERFILE_PATH=config\Dockerfile.dev"
-if not exist "%DOCKERFILE_PATH%" if exist "Dockerfile.dev" (
-    set "DOCKERFILE_PATH=Dockerfile.dev"
-    echo Using Dockerfile.dev from main directory
-) else (
-    echo Using Dockerfile.dev from config directory
+if not exist "%DOCKERFILE_PATH%" (
+    if exist "Dockerfile.dev" (
+        set "DOCKERFILE_PATH=Dockerfile.dev"
+        echo Using Dockerfile.dev from main directory
+    ) else (
+        echo Using Dockerfile.dev from config directory
+    )
 )
 
-REM Get the repository name from the current directory
+REM Get repository name
 for %%I in ("%CD%") do set "DIRNAME=%%~nxI"
 set "REPO_NAME=%DIRNAME%"
 set "REPO_NAME=%REPO_NAME:workflows-=%"
@@ -60,25 +61,30 @@ set "APP_NAME=workflows-app-%REPO_NAME%"
 
 echo Preparing %APP_NAME%...
 
-REM Check if the image exists
+REM Reset IMAGE_EXISTS
+set "IMAGE_EXISTS="
+
+REM Check if image exists
 for /f %%i in ('docker images -q %APP_NAME% 2^>nul') do set "IMAGE_EXISTS=%%i"
 
-REM Build if image doesn't exist or --rebuild flag is set
+REM Build or rebuild
 if "%IMAGE_EXISTS%"=="" (
     echo Docker image not found. Building: %APP_NAME%
     docker build -t %APP_NAME% -f %DOCKERFILE_PATH% .
+) else if "%REBUILD%"=="true" (
+    echo Forcing rebuild of Docker image: %APP_NAME%
+    docker build --no-cache -t %APP_NAME% -f %DOCKERFILE_PATH% .
 ) else (
-    if "%REBUILD%"=="true" (
-        echo Forcing rebuild of Docker image: %APP_NAME%
-        docker build --no-cache -t %APP_NAME% -f %DOCKERFILE_PATH% .
-    ) else (
-        echo Docker image %APP_NAME% already exists. Skipping build.
-        echo Use --build flag to force a rebuild.
-    )
+    echo Docker image %APP_NAME% already exists. Skipping build.
+    echo Use --build to force rebuild.
 )
 
-REM Run the container
-echo Starting container on port %PORT%...
-docker run --rm -p %PORT%:%PORT% -it -e ENVIRONMENT=dev -e REGION=besg --name=%APP_NAME% -v %CD%:/usr/src/app/ %APP_NAME%
+REM Detect build failure (ERRORLEVEL is 0 if success)
+if errorlevel 1 (
+    echo ❌ Docker build failed. Exiting...
+    exit /b 1
+)
 
-endlocal 
+REM Start container (8080 is internal port)
+echo Starting container on port %PORT%...
+docker run --rm -p %PORT%:8080 -it -e ENVIRONMENT=
