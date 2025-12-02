@@ -1,12 +1,37 @@
-# Stacksync App Connector Template
+# Stacksync Google Sheets Connector
+
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![Flask](https://img.shields.io/badge/Flask-2.0%2B-green.svg)](https://flask.palletsprojects.com/)
+
 
 ![Stacksync](https://cdn.brandfetch.io/id9Bpy_H9O/theme/dark/logo.svg?c=1dxbfHSJFAPEGdCLU4o5B)
 
-Welcome to the **Stacksync App Connector Template** – your starting point for building enterprise-grade workflow connectors that integrate seamlessly with the Stacksync platform.
+## Overview
+
+This project provides a robust, scalable backend service for automating workflows involving **Google Sheets** and **CRM systems** (e.g., Salesforce). Built with **Flask** and integrated with the **Workflows CDK** (Custom Development Kit), it enables seamless operations such as reading/updating cells, creating/deleting sheets.
+
+The service acts as a RESTful API, handling authentication via Google Service Accounts for Sheets and configurable credentials for CRM integrations. It supports dynamic form population for UI-driven workflows and includes comprehensive error handling, logging, and metadata responses for auditability.
+
+### Key Features
+- **Google Sheets Integration**:
+  - Read cell values with position resolution.
+  - Update cells with value replacement and old-value logging.
+  - Create new sheets with custom names.
+  - Delete existing sheets.
+  - Dynamic population of available sheet names for dropdown UIs.
+- **Workflows CDK Compatibility**:
+  - Custom routes for `/execute` (action execution) and `/content` (dynamic UI data).
+  - Structured responses with data, metadata, and error handling.
+- **Extensibility**:
+  - Modular `src.google_sheet` module for Sheets utilities.
+  - Easy addition of new routes or CRM providers.
+
+This backend is ideal for no-code/low-code platforms, ETL pipelines, or internal automation tools.
+
 
 ## 🚀 What is a Stacksync Connector?
 
-A Stacksync Connector is a microservice that enables workflows to interact with external systems, APIs, and data sources. This template provides the foundation to build robust, scalable connectors that can:
+A Stacksync Connector is a microservice that enables workflows to interact with external systems, APIs, and data sources. 
 
 - **Authenticate** with third-party services (OAuth, API keys, custom auth)
 - **Execute actions** (create, read, update, delete operations)
@@ -14,64 +39,74 @@ A Stacksync Connector is a microservice that enables workflows to interact with 
 - **Handle errors gracefully** with comprehensive logging and monitoring
 - **Scale automatically** with containerized deployment
 
-## 📋 Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-- **Python 3.10+** - [Download here](https://python.org/downloads/)
-- **Docker & Docker Compose** - [Get Docker](https://docs.docker.com/get-docker/)
-- **Git** - [Install Git](https://git-scm.com/downloads)
-- **Code Editor** (VS Code, Cursor, etc.)
+## Prerequisites
+- Python 3.10 or higher.
+- Google Cloud Service Account credentials (JSON key file) for Sheets access.
+- Flask and required dependencies (see `requirements.txt` below).
+- Optional: CRM API credentials (e.g., Salesforce OAuth tokens).
 
 ## 🏁 Quick Start
 
-### 1. Clone and Setup
+### 1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/danyk20/google-sheets-connector.git
+   cd google-sheets-connector
+   ```
 
+### 2. **Set Up Virtual Environment**:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+### 3. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+### 4. **Configure Environment**:
+   - Set variables in `.env` file:
+
+## Usage
+
+Run the application:
 ```bash
-# Clone the template
-git clone <repository-url> my-connector-name
-cd my-connector-name
-
-# Make scripts executable (Unix/Mac)
-chmod +x run_dev.sh
-
-# Or use the batch file (Windows)
-# run_dev.bat
-```
-
-### 2. Configure Your Connector
-
-Edit `app_config.yaml` to customize your connector:
-
-```yaml
-app_settings:
-  app_type: "my_connector" # Unique identifier (lowercase, underscores only)
-  app_name: "My Connector App" # Display name
-  app_description: "Description" # Brief description
-  app_icon_svg_url: "https://..." # SVG icon URL
-```
-
-### 3. Run Development Environment
-
-```bash
-# Unix/Mac
 ./run_dev.sh
-
-# Windows
-run_dev.bat
-
-# Force rebuild (if needed)
-./run_dev.sh --build
 ```
 
-Your connector will be available at `http://localhost:2003`
+The server starts on `http://localhost:2003` (configurable via Flask). Use tools like Ngrok for public exposure.
 
-### 4. Explore the Examples
+### API Endpoints
 
-The template includes two example modules to help you understand the patterns:
+All endpoints expect JSON payloads and return structured responses.
 
-- **`src/modules/create_contacts/`** - Full-featured contact creation module
-- **`src/modules/new_empty_action/`** - Minimal template for new actions
+#### Google Sheets Operations
+
+- **Read Cell** (`POST /execute` - Read Route):
+  - **Payload**: `{"sheet_name": "Sheet1", "row": "1", "column": "2"}`.
+  - **Response (200)**: `{"data": "Old Value", "metadata": {"row": 1, "column": 1, "sheet": "Sheet1"}}`.
+  - **Errors**: 400 (Invalid position), 500 (API failure).
+
+- **Update Cell** (`POST /execute` - Update Route):
+  - **Payload**: `{"sheet_name": "Sheet1", "value": "New Value", "row": "1", "column": "1"}`.
+  - **Response (200)**: `{"data": "New Value", "metadata": {"row": 1, "column": 1, "sheet": "Sheet1", "old_value": "Old Value"}}`.
+  - **Errors**: 400 (Position resolution), 500 (Update failure).
+
+- **Create Sheet** (`POST /execute` - Create Route):
+  - **Payload**: `{"sheet_name": "NewSheet"}`.
+  - **Response (200)**: `{"data": ["Sheet creation succeeded."], "metadata": {"error": null}}`.
+  - **Errors**: 500 (Creation failure).
+
+- **Delete Sheet** (`POST /execute` - Delete Route):
+  - **Payload**: `{"sheet_name": "SheetToDelete"}`.
+  - **Response (200)**: `{"data": ["Sheet deletion succeeded."], "metadata": {"error": null}}`.
+  - **Errors**: 500 (Deletion failure).
+
+- **Dynamic Content** (`POST /content` - All Routes):
+  - **Payload**: `{"content_object_names": ["sheets"]}`.
+  - **Response (200)**: `{"content_objects": [{"content_object_name": "sheets", "data": ["Sheet1", "Sheet2"]}]}`.
+  - Populates UI dropdowns with available sheets.
+
 
 ## 📚 Documentation
 
@@ -79,28 +114,57 @@ For detailed implementation guides, best practices, and advanced topics, refer t
 
 ## 🏗️ Project Structure
 
+
 ```
-├── src/modules/                    # Your connector modules
-│   ├── create_contacts/           # Example: contact creation
-│   └── new_empty_action/          # Template for new modules
-├── config/                        # Docker and deployment configs
-├── documentation/                 # Detailed guides and documentation
-├── app_config.yaml               # Main configuration
-├── requirements.txt              # Python dependencies
-├── main.py                       # Application entry point
-└── README.md                     # This file
+.
+├── Dockerfile
+├── README.md
+├── app_config.yaml
+├── config
+│         ├── Dockerfile.dev
+│         ├── entrypoint.sh
+│         └── gunicorn_config.py
+├── main.py
+├── requirements.txt
+├── run_dev.bat
+├── run_dev.sh
+└── src
+    ├── google_sheet.py
+    └── modules
+        ├── create_contacts
+        │         ├── README.md
+        │         └── v1
+        │             ├── module_config.yaml
+        │             ├── route.py
+        │             └── schema.json
+        ├── create_sheet
+        │         └── v1
+        │             ├── module_config.yaml
+        │             ├── route.py
+        │             └── schema.json
+        ├── delete_sheet
+        │         └── v1
+        │             ├── module_config.yaml
+        │             ├── route.py
+        │             └── schema.json
+        ├── read_cell
+        │         └── v1
+        │             ├── module_config.yaml
+        │             ├── route.py
+        │             └── schema.json
+        └── update_cell
+            └── v1
+                ├── module_config.yaml
+                ├── route.py
+                └── schema.json
 ```
 
-## 🔧 Development Workflow
-
-### Creating a New Module
-
-1. **Copy the template**: Duplicate `src/modules/new_empty_action/`
-2. **Rename appropriately**: Use descriptive names like `get_contacts`, `sync_data`
-3. **Update configuration**: Edit `module_config.yaml` with module metadata
-4. **Design the schema**: Define form fields in `schema.json`
-5. **Implement logic**: Add your business logic in `route.py`
-6. **Test thoroughly**: Use the built-in testing framework
+### Example Request (curl)
+```bash
+curl -X POST http://127.0.0.1:5000/read_cell/v1/execute \
+  -H "Content-Type: application/json" \
+  -d '{"data":{"sheet_name": "Sheet1", "value": "Updated", "row": "1", "column": "1"}}'
+```
 
 ### Module Components
 
@@ -119,6 +183,9 @@ ENVIRONMENT=dev|stage|prod
 REGION=usnv|besg|other
 API_KEY=your-api-key
 SENTRY_DSN=your-sentry-dsn
+GOOGLE_APPLICATION_CREDENTIALS=[path_to_auth.json]  # For auth
+SCOPE=https://www.googleapis.com/auth/spreadsheets  
+SHEET_ID=[your_sheet_id]
 ```
 
 ## 🛡️ Security Best Practices
@@ -134,10 +201,18 @@ SENTRY_DSN=your-sentry-dsn
 - **Documentation**: [Stacksync Docs](https://docs.stacksync.com/)
 - **Community**: [Join our Slack](https://docs.stacksync.com/start-here/community)
 
+## Testing
+- Unit tests: Use `pytest` for `src.google_sheet` functions (mock Google API calls).
+- Integration: Test endpoints with valid Service Account credentials.
+- Mock responses for offline testing.
+
+```shell
+pytest tests
+```
+
+
+Follow PEP 8 style guidelines. Add tests for new features.
+
 ---
 
-**Ready to build something amazing?** 🚀
-
-Start by exploring the example modules, then dive into the documentation for detailed implementation guides. The Stacksync platform is designed to make connector development as smooth and powerful as possible.
-
-_Happy coding!_ 👨‍💻👩‍💻
+*Built with ❤️ for efficient workflow automation.*
