@@ -29,4 +29,6 @@ logs/
 # Distribution / packaging
 dist/
 build/
-*.egg-info/ 
+*.egg-info/
+
+./challenge-stacksync.json
