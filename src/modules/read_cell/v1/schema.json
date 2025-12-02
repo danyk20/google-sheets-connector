@@ -1,0 +1,48 @@
+{
+  "metadata": {
+    "workflows_module_schema_version": "1.0.0"
+  },
+  "fields": [
+    {
+      "id": "row",
+      "type": "string",
+      "label": "Selected Row",
+      "validation": {
+        "required": true
+      }
+    },
+    {
+      "id": "column",
+      "type": "string",
+      "label": "Selected Column",
+      "validation": {
+        "required": true
+      }
+    },
+    {
+      "type": "string",
+      "id": "sheet_name",
+      "label": "Sheet to be read from",
+      "validation": {
+        "required": true
+      },
+      "choices": {
+        "values": []
+      },
+      "content": {
+        "type": ["managed"],
+        "content_objects": [
+          {
+            "id": "sheets"
+          }
+        ]
+      },
+      "ui_options": {
+        "ui_widget": "SelectWidget"
+      }
+    }
+  ],
+  "ui_options": {
+    "ui_order": ["row", "column", "sheet_name"]
+  }
+}

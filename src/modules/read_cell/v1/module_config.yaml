@@ -1,0 +1,3 @@
+module_settings:
+  module_name: "Read Google Sheet cell"
+  module_description: "Connector allowing users to perform Read operations on spreadsheets"
