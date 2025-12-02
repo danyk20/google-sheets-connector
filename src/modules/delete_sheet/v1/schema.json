@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "workflows_module_schema_version": "1.0.0"
+  },
+  "fields": [
+    {
+      "type": "string",
+      "id": "sheet_name",
+      "label": "Sheet to be deleted",
+      "validation": {
+        "required": true
+      },
+      "choices": {
+        "values": []
+      },
+      "content": {
+        "type": ["managed"],
+        "content_objects": [
+          {
+            "id": "sheets"
+          }
+        ]
+      },
+      "ui_options": {
+        "ui_widget": "SelectWidget"
+      }
+    }
+  ],
+  "ui_options": {
+    "ui_order": ["sheet_name"]
+  }
+}
