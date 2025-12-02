@@ -54,6 +54,7 @@ fi
 # Get the repository name from the current directory
 REPO_NAME=$(basename "$PWD")
 REPO_NAME=${REPO_NAME#workflows-} # Remove 'workflows-' prefix if present
+REPO_NAME=$(echo "$REPO_NAME" | tr '[:upper:]' '[:lower:]') # Convert to lowercase
 APP_NAME="workflows-app-${REPO_NAME}"
 
 echo "Preparing ${APP_NAME}..."
