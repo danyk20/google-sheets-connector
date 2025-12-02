@@ -1,3 +1,4 @@
+pytest
 # Flask
 flask
 werkzeug
@@ -7,6 +8,13 @@ requests
 gunicorn==22.0.0
 # Additional Requirements
 ## Add your additional requirements here
+google-auth-httplib2==0.2.1
+google-auth-oauthlib==1.2.2
+google-auth==2.43.0
+google-api-python-client==2.187.0
+setuptools==80.9.0
+python-dotenv==1.2.1
+gspread==6.2.1
 authlib==1.1.0
 sentry-sdk[Flask]
 
