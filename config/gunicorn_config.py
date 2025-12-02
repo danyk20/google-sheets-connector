@@ -6,6 +6,6 @@ errorlog = "-"   # Print error log to stdout
 capture_output = True
 enable_stdio_inheritance = True
 
-workers = 2
+workers = 4
 threads = 1
 timeout = 360
